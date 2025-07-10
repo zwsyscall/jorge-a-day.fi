@@ -4,7 +4,10 @@ use crate::{api_schema, config::AppConfig};
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use log::{debug, error, info};
-use notify::{Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{
+    Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
+    event::{ModifyKind, RenameMode},
+};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 use uuid::Uuid;
@@ -78,6 +81,25 @@ impl ImageCache {
 
         self.cache.insert(id.to_owned(), image.clone());
         Ok(id)
+    }
+    pub async fn remove_image(&mut self, img: &PathBuf) -> Option<Image> {
+        let image_path = img.canonicalize().ok()?;
+
+        if !self
+            .directories
+            .iter()
+            .any(|dir| image_path.starts_with(dir))
+        {
+            return None;
+        }
+
+        let image_id = self
+            .cache
+            .iter()
+            .find(|(_, img)| img.path == image_path)
+            .map(|(key, _)| key.to_owned())?;
+
+        self.cache.remove(&image_id)
     }
 
     pub async fn fetch_image(&mut self, key: &str) -> Result<Image, anyhow::Error> {
@@ -204,7 +226,7 @@ pub async fn directory_watcher(cache: Arc<Mutex<ImageCache>>) {
     };
 
     for directory in &directories {
-        debug!("Starting to watch {:?}", directory);
+        info!("Starting to watch {:?}", directory);
         watcher
             .watch(directory, RecursiveMode::Recursive)
             .unwrap_or_else(|err| error!("Error watching directory {:#?} => {}", &directory, err));
@@ -213,15 +235,17 @@ pub async fn directory_watcher(cache: Arc<Mutex<ImageCache>>) {
     while let Some(res) = rx.recv().await {
         match res {
             Ok(event) => match event.kind {
-                EventKind::Create(_)
-                | EventKind::Modify(notify::event::ModifyKind::Name(
-                    notify::event::RenameMode::To,
-                )) => {
-                    debug!("Modified name!");
+                EventKind::Create(_) | EventKind::Modify(ModifyKind::Name(RenameMode::To)) => {
                     let mut cache_lock = cache.lock().await;
                     for path in event.paths {
                         #[allow(unused)]
                         cache_lock.insert_image(&path).await;
+                    }
+                }
+                EventKind::Remove(_) | EventKind::Modify(ModifyKind::Name(RenameMode::From)) => {
+                    let mut cache_lock = cache.lock().await;
+                    for path in event.paths {
+                        cache_lock.remove_image(&path).await;
                     }
                 }
                 _ => {}
