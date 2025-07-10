@@ -82,21 +82,11 @@ impl ImageCache {
         self.cache.insert(id.to_owned(), image.clone());
         Ok(id)
     }
-    pub async fn remove_image(&mut self, img: &PathBuf) -> Option<Image> {
-        let image_path = img.canonicalize().ok()?;
-
-        if !self
-            .directories
-            .iter()
-            .any(|dir| image_path.starts_with(dir))
-        {
-            return None;
-        }
-
+    pub async fn remove_image(&mut self, image_path: &PathBuf) -> Option<Image> {
         let image_id = self
             .cache
             .iter()
-            .find(|(_, img)| img.path == image_path)
+            .find(|(_, img)| img.path == *image_path)
             .map(|(key, _)| key.to_owned())?;
 
         self.cache.remove(&image_id)
@@ -245,7 +235,10 @@ pub async fn directory_watcher(cache: Arc<Mutex<ImageCache>>) {
                 EventKind::Remove(_) | EventKind::Modify(ModifyKind::Name(RenameMode::From)) => {
                     let mut cache_lock = cache.lock().await;
                     for path in event.paths {
-                        cache_lock.remove_image(&path).await;
+                        debug!(
+                            "Removed: {:?}",
+                            cache_lock.remove_image(&path).await.map(|i| i.path)
+                        );
                     }
                 }
                 _ => {}

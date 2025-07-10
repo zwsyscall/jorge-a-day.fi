@@ -12,11 +12,15 @@ async fn get_daily_image(
     _: web::Data<AppConfig>,
     cache: web::Data<Arc<Mutex<ImageCache>>>,
 ) -> impl Responder {
-    let image = cache.lock().await.get_newest_image().await.unwrap();
-
-    HttpResponse::Ok()
-        .content_type(image.content_type())
-        .body(image.data)
+    match cache.lock().await.get_newest_image().await {
+        Some(image) => HttpResponse::Ok()
+            .content_type(image.content_type())
+            .body(image.data),
+        None => {
+            error!("Daily image is missing?");
+            HttpResponse::NotFound().finish()
+        }
+    }
 }
 
 #[get("/images")]
