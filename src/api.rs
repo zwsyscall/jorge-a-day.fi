@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::config::AppConfig;
 use actix_web::{HttpResponse, Responder, get, http::header::ContentType, web};
+use log::error;
 use tokio::sync::Mutex;
 
 use crate::cache::ImageCache;
@@ -36,9 +37,14 @@ async fn get_image(
     path: web::Path<String>,
 ) -> impl Responder {
     let image_path = path.into_inner();
-    let image = cache.lock().await.fetch_image(&image_path).await.unwrap();
 
-    HttpResponse::Ok()
-        .content_type(image.content_type())
-        .body(image.data)
+    match cache.lock().await.fetch_image(&image_path).await {
+        Ok(image) => HttpResponse::Ok()
+            .content_type(image.content_type())
+            .body(image.data),
+        Err(e) => {
+            error!("Error with requested file {:?}", e);
+            HttpResponse::NotFound().finish()
+        }
+    }
 }
