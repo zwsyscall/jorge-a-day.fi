@@ -27,3 +27,4 @@ target
 images/
 config.toml
 Cargo.lock
+/static
