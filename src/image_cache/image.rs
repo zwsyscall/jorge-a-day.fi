@@ -8,7 +8,7 @@ pub struct Image {
     pub path: PathBuf,
     pub data: Vec<u8>,
     pub cache_time: DateTime<Utc>,
-    pub image_type: imghdr::Type,
+    image_type: imghdr::Type,
     pub image_age: DateTime<Utc>,
 }
 
@@ -55,7 +55,7 @@ impl FromStr for Image {
     fn from_str(path: &str) -> Result<Self, Self::Err> {
         let path = PathBuf::from(path).canonicalize()?;
 
-        Ok(Image {
+        Ok(Self {
             image_type: imghdr::from_file(&path)?.ok_or(anyhow!("File type is not supported"))?,
             image_age: DateTime::from(path.metadata()?.created()?),
             path: path,
