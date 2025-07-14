@@ -37,6 +37,8 @@ async fn main() -> std::io::Result<()> {
             .service(api::get_daily_image)
             .service(api::get_image)
             .service(api::list_images)
+            .service(web_gui::gallery)
+            .service(web_gui::favicon)
     })
     .bind(("127.0.0.1", 8080))?
     .run()
