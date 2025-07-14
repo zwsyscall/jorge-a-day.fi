@@ -2,21 +2,23 @@ mod api;
 mod api_schema;
 mod cache;
 mod config;
-mod image;
+mod image_cache;
+mod web_gui;
 
-use crate::cache::*;
 use actix_web::{App, HttpServer, middleware, web};
 use confique::Config;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+use crate::cache::{cache_cleanup, directory_watcher};
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Fix this
+    // Fix this jibberish
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("debug"));
     let app_config = config::AppConfig::from_file(config::CONFIG_PATH).unwrap();
 
-    let mut cache = ImageCache::from(app_config.cache_age);
+    let mut cache = image_cache::cache::Cache::from(app_config.cache_age);
     cache.init(&app_config.clone()).await;
 
     let shared_cache = Arc::new(Mutex::new(cache));
