@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jorge a day!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d0d0d;
+            color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            padding: 2rem 0 1rem;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            width: 100%;
+            max-width: 1200px;
+            box-sizing: border-box;
+        }
+
+        .gallery a {
+            display: block;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery a:hover {
+            transform: scale(1.03);
+        }
+
+        .gallery img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <header>Jorge Gallery</header>
+
+    <main class="gallery">
+        {% for image_url in images %}
+        <a href="{{ image_url }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ image_url }}" alt="It's Jorge!">
+        </a>
+        {% endfor %}
+    </main>
+</body>
+
+</html>
