@@ -18,11 +18,11 @@ pub struct Image {
     pub url: String,
 }
 
-impl From<(&String, crate::image::Image)> for Image {
-    fn from((key, img): (&std::string::String, crate::image::Image)) -> Self {
+impl From<(String, crate::image_cache::image::Image)> for Image {
+    fn from((key, img): (String, crate::image_cache::image::Image)) -> Self {
         Self {
+            url: key,
             date: img.image_age,
-            url: key.to_owned(),
         }
     }
 }
