@@ -1,11 +1,16 @@
 use std::sync::Arc;
 
+use crate::image_cache::cache::Cache;
 use crate::{cache::CacheTrait, config::AppConfig};
 use actix_web::{HttpRequest, HttpResponse, Responder, get, http::header::ContentType, web};
 use log::error;
+use serde::Deserialize;
 use tokio::sync::Mutex;
 
-use crate::image_cache::cache::Cache;
+#[derive(Deserialize)]
+struct CompressQuery {
+    compress: Option<String>,
+}
 
 #[get("/daily")]
 async fn daily(_: web::Data<AppConfig>, cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
@@ -32,19 +37,25 @@ async fn list_images(req: HttpRequest, cache: web::Data<Arc<Mutex<Cache>>>) -> i
 
 #[get("/images/{id}")]
 async fn get_image(
-    _: web::Data<AppConfig>,
     cache: web::Data<Arc<Mutex<Cache>>>,
     path: web::Path<String>,
+    query: web::Query<CompressQuery>,
 ) -> impl Responder {
     let image_path = path.into_inner();
+    let compressed = query.compress.clone().map(|_| true).unwrap_or(false);
 
-    match cache.lock().await.get_data(&image_path).await {
-        Ok(image) => HttpResponse::Ok()
-            .content_type(image.content_type())
-            .body(image.data),
+    match cache
+        .lock()
+        .await
+        .get_data_bytes(&image_path, compressed)
+        .await
+    {
+        Ok((content_type, image)) => {
+            return HttpResponse::Ok().content_type(content_type).body(image);
+        }
         Err(e) => {
             error!("Error with requested file {:?}", e);
-            HttpResponse::NotFound().finish()
+            return HttpResponse::NotFound().finish();
         }
     }
 }
