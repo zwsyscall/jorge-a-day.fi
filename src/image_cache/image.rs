@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use std::{path::PathBuf, str::FromStr};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Image {
     pub path: PathBuf,
     pub data: Vec<u8>,
