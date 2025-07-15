@@ -8,10 +8,7 @@ use tokio::sync::Mutex;
 use crate::image_cache::cache::Cache;
 
 #[get("/daily")]
-async fn get_daily_image(
-    _: web::Data<AppConfig>,
-    cache: web::Data<Arc<Mutex<Cache>>>,
-) -> impl Responder {
+async fn daily(_: web::Data<AppConfig>, cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
     match cache.lock().await.get_newest_image().await {
         Some(image) => HttpResponse::Ok()
             .content_type(image.content_type())
