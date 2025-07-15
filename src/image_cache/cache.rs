@@ -91,6 +91,41 @@ impl CacheTrait for Cache {
 
         Err(anyhow!("no image found"))
     }
+    async fn get_data_bytes(
+        &mut self,
+        key: &String,
+        compress: bool,
+    ) -> Result<(String, Vec<u8>), anyhow::Error> {
+        if let Some(cached_image) = self.cache.get_mut(key) {
+            trace!("Image present in cache, age {}", cached_image.cache_age());
+
+            if compress {
+                if !cached_image.compressed_is_empty() {
+                    return Ok((
+                        "image/webp".to_string(),
+                        cached_image.compressed_data.clone(),
+                    ));
+                }
+            }
+
+            // if it's not old enough AND the data is actually present
+            if cached_image.cache_age() < self.max_cache_age_ms && !cached_image.is_empty() {
+                trace!(
+                    "Cache has not expired and data is present, age: {}, size: {} bytes‚",
+                    &cached_image.cache_age(),
+                    cached_image.data.len()
+                );
+                return Ok((cached_image.content_type(), cached_image.data.clone()));
+            }
+
+            trace!("Fetching image from disk");
+            cached_image.resolve()?;
+            return Ok((cached_image.content_type(), cached_image.data.clone()));
+        }
+
+        Err(anyhow!("no image found"))
+    }
+
     fn clean_cache(&mut self) {
         let mut cleared_images = 0;
 
