@@ -42,7 +42,10 @@ impl CacheTrait for Cache {
             let img_str = image_path
                 .to_str()
                 .ok_or(anyhow!("Image path is not valid."))?;
-            img_str.parse()?
+            let mut img: Image = img_str.parse()?;
+            // This speeds up the first view of the site.
+            img.resolve_compressed()?;
+            img
         };
 
         let id = loop {
@@ -179,6 +182,10 @@ impl Cache {
                 error!("Error inserting image to cache: {}", e);
             }
         }
+        info!(
+            "Cache startup finalized. Added {} files to cache.",
+            files.len()
+        );
     }
     pub async fn get_images(&self, prefix: &str) -> Vec<api_schema::Image> {
         let mut images: Vec<(&str, &Image)> = self
