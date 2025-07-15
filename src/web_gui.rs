@@ -24,11 +24,10 @@ async fn gallery(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
         .collect();
 
     let page = GalleryPage { images: data };
-    Html::new(page.render().unwrap())
+    Html::new(page.render().unwrap()) // <-- fix this (at some point)
 }
 
 #[get("/favicon.ico")]
-
 async fn favicon() -> impl Responder {
     HttpResponse::Ok()
         .content_type("image/vnd.microsoft.icon")
