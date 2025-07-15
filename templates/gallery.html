@@ -62,7 +62,7 @@
     <main class="gallery">
         {% for image_url in images %}
         <a href="{{ image_url }}" target="_blank" rel="noopener noreferrer">
-            <img src="{{ image_url }}" alt="It's Jorge!">
+            <img src="{{ image_url }}?compress" alt="It's Jorge!">
         </a>
         {% endfor %}
     </main>
