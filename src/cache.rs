@@ -15,6 +15,11 @@ pub trait CacheTrait {
     async fn insert_data(&mut self, data: &Self::DataSource) -> Result<Self::Key, Self::Error>;
     async fn remove_data(&mut self, data: &Self::DataSource) -> Option<Self::Data>;
     async fn get_data(&mut self, key: &Self::Key) -> Result<Self::Data, Self::Error>;
+    async fn get_data_bytes(
+        &mut self,
+        key: &Self::Key,
+        compress: bool,
+    ) -> Result<(String, Vec<u8>), Self::Error>;
     fn directories(&self) -> Vec<PathBuf>;
     fn clean_cache(&mut self);
 }
