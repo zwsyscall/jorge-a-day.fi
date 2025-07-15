@@ -63,7 +63,12 @@ impl CacheTrait for Cache {
             .find(|(_, img)| img.path == *image_path)
             .map(|(key, _)| key.to_owned())?;
 
-        self.cache.remove(&image_id)
+        let image = self.cache.remove(&image_id);
+        if let Some(img) = &image {
+            debug!("Removed from cache: {} => {:#?}", image_id, img.path);
+        }
+
+        image
     }
     async fn get_data(&mut self, key: &String) -> Result<Image, anyhow::Error> {
         if let Some(cached_image) = self.cache.get_mut(key) {
