@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use crate::image_cache::cache::Cache;
-use actix_web::web::Html;
 use actix_web::{HttpResponse, Responder, get, web};
 use askama::Template;
 
@@ -20,11 +19,14 @@ async fn gallery(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
         .get_images("images")
         .await
         .iter()
-        .map(|i| i.url.clone())
+        .map(|i| i.url.to_owned())
         .collect();
 
     let page = GalleryPage { images: data };
-    Html::new(page.render().unwrap()) // <-- fix this (at some point)
+    match page.render() {
+        Ok(page) => HttpResponse::Ok().body(page),
+        Err(_) => HttpResponse::InternalServerError().body("Error templating gallery page"),
+    }
 }
 
 #[get("/favicon.ico")]
