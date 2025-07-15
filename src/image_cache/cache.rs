@@ -160,10 +160,6 @@ impl Cache {
             .collect()
     }
 
-    /*.map(|(key, img)| {
-        api_schema::Image::from((format!("{}/{}", prefix, key), img.to_owned()))
-    })
-    .collect() */
     async fn get_newest_image_id(&mut self) -> Option<String> {
         if let Some(id) = &self.newest_image {
             return Some(id.to_owned());
