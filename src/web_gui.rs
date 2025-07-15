@@ -12,7 +12,7 @@ struct GalleryPage {
     images: Vec<String>,
 }
 
-#[get("/gallery")]
+#[get("/")]
 async fn gallery(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
     let data: Vec<String> = cache
         .lock()
