@@ -17,12 +17,6 @@ pub struct Image {
 }
 
 impl Image {
-    /// Returns cache age in ms
-    pub fn cache_age(&self) -> i64 {
-        let now = Utc::now();
-        (now - self.cache_time).num_milliseconds()
-    }
-
     fn apply_exif_orientation(img: image::DynamicImage, orientation: u32) -> image::DynamicImage {
         use image::imageops::{flip_horizontal, flip_vertical, rotate90, rotate180, rotate270};
 
@@ -70,17 +64,27 @@ impl Image {
             .map(|mem| mem.to_vec())
     }
 
-    /// Loads image data to the cache and update cache age
-    pub fn resolve(&mut self) -> Result<(), anyhow::Error> {
-        self.data = std::fs::read(&self.path)?;
-        self.cache_time = Utc::now();
-        Ok(())
+    fn resolve_compressed(data: &[u8]) -> Result<Vec<u8>, anyhow::Error> {
+        Self::compress_image(&data)
+    }
+}
+
+impl Image {
+    /// Returns cache age in ms
+    pub fn cache_age(&self) -> i64 {
+        let now = Utc::now();
+        (now - self.cache_time).num_milliseconds()
     }
 
-    pub fn resolve_compressed(&mut self) -> Result<(), anyhow::Error> {
-        let data = std::fs::read(&self.path)?;
-        self.compressed_data = Self::compress_image(&data)?;
-        Ok(())
+    /// Loads image data to the cache and update cache age
+    pub fn resolve(&mut self) -> Result<(), anyhow::Error> {
+        if let Ok(data) = std::fs::read(&self.path) {
+            self.compressed_data = Self::resolve_compressed(&data)?;
+            self.data = data;
+            self.cache_time = Utc::now();
+            return Ok(());
+        }
+        Err(anyhow!("Unable to read image data"))
     }
 
     pub fn is_empty(&self) -> bool {
