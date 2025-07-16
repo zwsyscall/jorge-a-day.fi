@@ -79,7 +79,9 @@ impl Image {
     /// Loads image data to the cache and update cache age
     pub fn resolve(&mut self) -> Result<(), anyhow::Error> {
         if let Ok(data) = std::fs::read(&self.path) {
-            self.compressed_data = Self::resolve_compressed(&data)?;
+            if self.compressed_is_empty() {
+                self.compressed_data = Self::resolve_compressed(&data)?;
+            }
             self.data = data;
             self.cache_time = Utc::now();
             return Ok(());
