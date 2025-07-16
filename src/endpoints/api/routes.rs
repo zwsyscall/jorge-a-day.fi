@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::endpoints::schema::CompressQuery;
+use super::schema::CompressQuery;
 use crate::image_cache::cache::Cache;
 use crate::{cache::CacheTrait, config::AppConfig};
 use actix_web::{HttpRequest, HttpResponse, Responder, get, http::header::ContentType, web};

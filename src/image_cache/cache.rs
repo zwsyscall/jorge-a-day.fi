@@ -1,6 +1,6 @@
 use crate::cache::CacheTrait;
 use crate::config::AppConfig;
-use crate::endpoints::schema::ImageJson;
+use crate::endpoints::api::schema::ImageJson;
 use crate::image_cache::image::Image;
 
 use anyhow::anyhow;
@@ -128,6 +128,10 @@ impl CacheTrait for Cache {
         }
 
         Err(anyhow!("no image found"))
+    }
+
+    fn len(&self) -> usize {
+        self.cache.len()
     }
 
     fn clean_cache(&mut self) {

@@ -20,6 +20,7 @@ pub trait CacheTrait {
         key: &Self::Key,
         compress: bool,
     ) -> Result<(String, Vec<u8>), Self::Error>;
+    fn len(&self) -> usize;
     fn directories(&self) -> Vec<PathBuf>;
     fn clean_cache(&mut self);
 }

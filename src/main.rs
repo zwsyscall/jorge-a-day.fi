@@ -10,55 +10,69 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::cache::{cache_cleanup, directory_watcher};
-
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
-    // Fix this jibberish
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
     let app_config = config::AppConfig::from_file(config::CONFIG_PATH)?;
+    let bind_address = app_config.address.clone();
+
     let ssl_enabled = app_config.ssl;
     let certificate_bundle = app_config.check();
 
-    let bind_address = app_config.address.to_owned();
-
     let mut cache = image_cache::cache::Cache::from(app_config.cache_age);
-    cache.init(&app_config.clone()).await;
+    cache.init(&app_config).await;
 
     let shared_cache = Arc::new(Mutex::new(cache));
-    let shared_cache_clone = Arc::clone(&shared_cache);
-    let shared_cache_clone_2 = Arc::clone(&shared_cache);
 
-    tokio::spawn(async move { cache_cleanup(shared_cache_clone).await });
-    tokio::spawn(async move { directory_watcher(shared_cache_clone_2).await });
+    {
+        let cache = Arc::clone(&shared_cache);
+        tokio::spawn(async move {
+            cache_cleanup(cache).await;
+        });
+    }
+
+    {
+        let cache = Arc::clone(&shared_cache);
+        tokio::spawn(async move {
+            directory_watcher(cache).await;
+        });
+    }
 
     info!("Starting server at {}", bind_address);
+
+    let app_config = app_config.clone();
+    let shared_cache = Arc::clone(&shared_cache);
+
     let server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .app_data(web::Data::new(app_config.to_owned()))
-            .app_data(web::Data::new(shared_cache.to_owned()))
-            .service(endpoints::api::daily)
-            .service(endpoints::api::get_image)
-            .service(endpoints::api::list_images)
-            .service(endpoints::ui::gallery)
-            .service(endpoints::ui::favicon)
+            .app_data(web::Data::new(app_config.clone()))
+            .app_data(web::Data::new(shared_cache.clone()))
+            .service(endpoints::api::routes::daily)
+            .service(endpoints::api::routes::get_image)
+            .service(endpoints::api::routes::list_images)
+            .service(endpoints::ui::pages::gallery)
+            .service(endpoints::ui::pages::favicon)
     });
 
-    // Start the server with (or without) SSL
     if ssl_enabled {
-        if let Ok((cert, key)) = certificate_bundle {
-            info!("Starting server with SSL enabled.");
-            let builder = match config::create_ssl_builder(&cert, &key) {
-                Ok(data) => data,
-                Err(e) => {
+        match certificate_bundle {
+            Ok((cert, key)) => {
+                info!("Starting server with SSL enabled.");
+                let builder = config::create_ssl_builder(&cert, &key).map_err(|e| {
                     error!("Error creating TLS instance: {}", e);
-                    panic!("Cannot access certificates!")
-                }
-            };
-            server.bind_openssl(bind_address, builder)?.run().await?;
+                    anyhow::anyhow!("Cannot access certificates!")
+                })?;
+                server.bind_openssl(bind_address, builder)?.run().await?;
+            }
+            Err(e) => {
+                error!("Invalid certificate bundle: {}", e);
+                return Err(e.into());
+            }
         }
     } else {
-        info!("Starting server without SSL enabled.");
+        info!("Starting server without SSL.");
         server.bind(bind_address)?.run().await?;
     }
 
