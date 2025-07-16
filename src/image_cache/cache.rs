@@ -43,10 +43,7 @@ impl CacheTrait for Cache {
             let img_str = image_path
                 .to_str()
                 .ok_or(anyhow!("Image path is not valid."))?;
-            let mut img: Image = img_str.parse()?;
-            // This speeds up the first view of the site.
-            img.resolve_compressed()?;
-            img
+            img_str.parse()?
         };
 
         let id = loop {
@@ -232,6 +229,7 @@ impl Cache {
         None
     }
 }
+
 impl From<i64> for Cache {
     fn from(cache_max_age: i64) -> Self {
         info!(
