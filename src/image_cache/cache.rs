@@ -1,6 +1,7 @@
 use crate::cache::CacheTrait;
+use crate::config::AppConfig;
+use crate::endpoints::schema::ImageJson;
 use crate::image_cache::image::Image;
-use crate::{api_schema, config::AppConfig};
 
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
@@ -187,7 +188,8 @@ impl Cache {
             files.len()
         );
     }
-    pub async fn get_images(&self, prefix: &str) -> Vec<api_schema::Image> {
+
+    pub async fn get_images(&self, prefix: &str) -> Vec<ImageJson> {
         let mut images: Vec<(&str, &Image)> = self
             .cache
             .iter()
@@ -201,9 +203,7 @@ impl Cache {
         // Return transformed images :)
         images
             .into_iter()
-            .map(|(key, img)| {
-                api_schema::Image::from((format!("{}/{}", prefix, key), img.to_owned()))
-            })
+            .map(|(key, img)| ImageJson::from((format!("{}/{}", prefix, key), img.to_owned())))
             .collect()
     }
 

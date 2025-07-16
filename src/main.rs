@@ -1,9 +1,7 @@
-mod api;
-mod api_schema;
 mod cache;
 mod config;
+mod endpoints;
 mod image_cache;
-mod web_gui;
 
 use actix_web::{App, HttpServer, middleware, web};
 use confique::Config;
@@ -39,11 +37,11 @@ async fn main() -> anyhow::Result<()> {
             .wrap(middleware::Logger::default())
             .app_data(web::Data::new(app_config.to_owned()))
             .app_data(web::Data::new(shared_cache.to_owned()))
-            .service(api::daily)
-            .service(api::get_image)
-            .service(api::list_images)
-            .service(web_gui::gallery)
-            .service(web_gui::favicon)
+            .service(endpoints::api::daily)
+            .service(endpoints::api::get_image)
+            .service(endpoints::api::list_images)
+            .service(endpoints::ui::gallery)
+            .service(endpoints::ui::favicon)
     });
 
     // Start the server with (or without) SSL

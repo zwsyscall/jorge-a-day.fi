@@ -33,5 +33,5 @@ async fn gallery(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
 async fn favicon() -> impl Responder {
     HttpResponse::Ok()
         .content_type("image/vnd.microsoft.icon")
-        .body(&include_bytes!("../static/favicon.ico")[..])
+        .body(&include_bytes!("../../static/favicon.ico")[..])
 }
