@@ -1,4 +1,8 @@
-use crate::{cache::CacheTrait, endpoints::ui::pages::GalleryPage, image_cache::cache::Cache};
+use crate::{
+    cache::CacheTrait,
+    endpoints::ui::pages::{AboutPage, GalleryPage},
+    image_cache::cache::Cache,
+};
 use actix_web::{HttpResponse, Responder, get, web};
 use askama::Template;
 use std::sync::Arc;
@@ -25,14 +29,24 @@ async fn gallery(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
 
 #[get("/about")]
 async fn about(cache: web::Data<Arc<Mutex<Cache>>>) -> impl Responder {
-    let image_size = cache.lock().await.len();
+    use rand::prelude::*;
+    let mut rng = rand::rng();
 
-    /*let page = AboutPage { images: data };
-    match page.render() {
-        Ok(page) => HttpResponse::Ok().body(page),
-        Err(_) => HttpResponse::InternalServerError().body("Error templating gallery page"),
-    }*/
-    "ok"
+    let cache_lock = cache.lock().await;
+    let len = cache_lock.len();
+    let images = cache_lock.get_images("images").await;
+    if let Some(random_image) = images.choose(&mut rng) {
+        let page = AboutPage {
+            image_count: len,
+            random_image: random_image.url.clone(),
+        };
+
+        return match page.render() {
+            Ok(page) => HttpResponse::Ok().body(page),
+            Err(_) => HttpResponse::InternalServerError().body("Error templating about page"),
+        };
+    }
+    HttpResponse::InternalServerError().body("Error generating about page")
 }
 
 #[get("/favicon.ico")]

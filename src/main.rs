@@ -53,6 +53,7 @@ async fn main() -> anyhow::Result<()> {
             .service(endpoints::api::routes::get_image)
             .service(endpoints::api::routes::list_images)
             .service(endpoints::ui::routes::gallery)
+            .service(endpoints::ui::routes::about)
             .service(endpoints::ui::routes::favicon)
     });
 

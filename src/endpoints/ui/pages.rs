@@ -10,4 +10,5 @@ pub struct GalleryPage {
 #[template(path = "about.html.j2", ext = "html")]
 pub struct AboutPage {
     pub image_count: usize,
+    pub random_image: String,
 }

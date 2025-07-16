@@ -17,6 +17,24 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .container a {
+            color: pink;
+        }
+
+        .container a:visited {
+            color: blue;
         }
 
         header {
@@ -27,11 +45,8 @@
         }
 
         .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
             padding: 1rem;
-            width: 100%;
+            width: 30%;
             max-width: 1200px;
             box-sizing: border-box;
         }
@@ -56,12 +71,33 @@
     </style>
 </head>
 
-<body>
-    <header>Jorge Gallery</header>
 
-    <main class="gallery">
-        {% image_count %}
+<body>
+    <header>About this site</header>
+
+    <main class="container">
+        <p>
+            This site was created to make sharing pictures of my cat easier. It is built with Rust using
+            <a href="https://actix.rs/">Actix-web</a> and
+            <a href="https://askama.readthedocs.io/en/stable/">Askama</a>, both phenomenal frameworks!
+            You can find the source code for this site
+            <a href="https://github.com/zwsyscall/jorge-a-day.fi">here</a>.
+        </p>
+        <p>
+            My cat, Jorge, was named after the late Pope Francis. While I am not religious, I have always admired
+            Pope Francis, and I thought it fitting to name my cat after him since he was born around the same time
+            and, like the Pope, wears all white.
+        </p>
+        <p>
+            Currently, this site hosts {{ image_count }} images of my cat, Jorge.
+        </p>
     </main>
+    <main class="gallery">
+        <a href="{{ random_image }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ random_image }}?compress" alt="It's today's Jorge picture!">
+        </a>
+    </main>
+
 </body>
 
 </html>
