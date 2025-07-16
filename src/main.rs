@@ -52,8 +52,8 @@ async fn main() -> anyhow::Result<()> {
             .service(endpoints::api::routes::daily)
             .service(endpoints::api::routes::get_image)
             .service(endpoints::api::routes::list_images)
-            .service(endpoints::ui::pages::gallery)
-            .service(endpoints::ui::pages::favicon)
+            .service(endpoints::ui::routes::gallery)
+            .service(endpoints::ui::routes::favicon)
     });
 
     if ssl_enabled {
